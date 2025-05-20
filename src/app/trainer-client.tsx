@@ -138,6 +138,4 @@ function ThemeToggle() {
       {isDark ? '☀️' : '🌙'}
     </button>
   )
-}
-
-Trainer.ThemeToggle = ThemeToggle 
+} 
