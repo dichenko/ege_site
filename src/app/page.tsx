@@ -1,103 +1,182 @@
-import Image from "next/image";
+'use client'
+
+import { useState, useEffect } from 'react'
+import { createClient } from '@supabase/supabase-js'
+import { Task } from '../types/task'
+
+// Заглушка для базы данных, пока не настроен Supabase
+const MOCK_TASKS: Task[] = [
+  { id: 1, text: 'Решите задачу: 2 + 2 * 2 = ?', answer: 6 },
+  { id: 2, text: 'Вычислите значение: 5! / 3! = ?', answer: 20 },
+  { id: 3, text: 'Найдите сумму: 1 + 2 + 3 + ... + 10 = ?', answer: 55 },
+]
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [tasks, setTasks] = useState<Task[]>(MOCK_TASKS)
+  const [currentTask, setCurrentTask] = useState<Task | null>(null)
+  const [userAnswer, setUserAnswer] = useState('')
+  const [message, setMessage] = useState('')
+  const [solvedTaskIds, setSolvedTaskIds] = useState<number[]>([])
+  const [progress, setProgress] = useState(0)
+  const [isDarkMode, setIsDarkMode] = useState(false)
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // Функция для загрузки данных из localStorage при первом рендеринге
+  useEffect(() => {
+    const savedSolvedTaskIds = localStorage.getItem('solvedTaskIds')
+    if (savedSolvedTaskIds) {
+      const parsedIds = JSON.parse(savedSolvedTaskIds)
+      setSolvedTaskIds(parsedIds)
+      setProgress(Math.round((parsedIds.length / tasks.length) * 100))
+    }
+
+    // Проверка предпочитаемой темы
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    setIsDarkMode(prefersDark)
+
+    // Загрузка первой задачи
+    loadRandomTask()
+  }, [])
+
+  // Загрузка случайной задачи, которую пользователь еще не решил
+  const loadRandomTask = () => {
+    const unsolvedTasks = tasks.filter(task => !solvedTaskIds.includes(task.id))
+    
+    if (unsolvedTasks.length === 0) {
+      // Все задачи решены
+      setCurrentTask(null)
+      return
+    }
+
+    const randomIndex = Math.floor(Math.random() * unsolvedTasks.length)
+    setCurrentTask(unsolvedTasks[randomIndex])
+    setUserAnswer('')
+    setMessage('')
+  }
+
+  // Обработка ответа пользователя
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!currentTask) return
+
+    const userAnswerNumber = Number(userAnswer)
+    const isCorrect = userAnswerNumber === currentTask.answer
+
+    if (isCorrect) {
+      const updatedSolvedTaskIds = [...solvedTaskIds, currentTask.id]
+      setSolvedTaskIds(updatedSolvedTaskIds)
+      localStorage.setItem('solvedTaskIds', JSON.stringify(updatedSolvedTaskIds))
+      
+      const newProgress = Math.round((updatedSolvedTaskIds.length / tasks.length) * 100)
+      setProgress(newProgress)
+      
+      setMessage('Правильно!')
+      
+      // Загружаем следующую задачу через секунду
+      setTimeout(loadRandomTask, 1000)
+    } else {
+      setMessage('Неправильно. Попробуйте еще раз или перейдите к другой задаче.')
+    }
+  }
+
+  // Переключение темы
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode)
+    document.documentElement.classList.toggle('dark')
+  }
+
+  // Начать заново
+  const resetProgress = () => {
+    localStorage.removeItem('solvedTaskIds')
+    setSolvedTaskIds([])
+    setProgress(0)
+    loadRandomTask()
+  }
+
+  return (
+    <main className={`flex min-h-screen flex-col items-center p-4 md:p-8 lg:p-12`}>
+      <div className="fixed top-4 right-4 flex items-center gap-4">
+        <button 
+          onClick={toggleTheme} 
+          className="p-2 rounded-full bg-gray-200 dark:bg-gray-700"
+        >
+          {isDarkMode ? '☀️' : '🌙'}
+        </button>
+        <a 
+          href="/Excel-Tasks.xlsx" 
+          download 
+          className="p-2 rounded-full bg-green-500 text-white hover:bg-green-600"
+        >
+          📊
+        </a>
+      </div>
+
+      <h1 className="text-2xl md:text-3xl font-bold mb-6 text-center">
+        Тренажер задач ЕГЭ по Excel
+      </h1>
+
+      <div className="w-full max-w-md mb-6">
+        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4">
+          <div 
+            className="bg-primary h-4 rounded-full transition-all duration-500" 
+            style={{ width: `${progress}%` }}
+          ></div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+        <p className="text-center mt-2">Прогресс: {progress}%</p>
+      </div>
+
+      {currentTask ? (
+        <div className="w-full max-w-md bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
+          <p className="text-lg mb-4">{currentTask.text}</p>
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="answer" className="block mb-2">Ваш ответ:</label>
+              <input 
+                id="answer"
+                type="number" 
+                value={userAnswer} 
+                onChange={(e) => setUserAnswer(e.target.value)} 
+                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded" 
+                required 
+              />
+            </div>
+            
+            {message && (
+              <p className={message.includes('Правильно') ? 'text-green-500' : 'text-red-500'}>
+                {message}
+              </p>
+            )}
+            
+            <div className="flex gap-2">
+              <button 
+                type="submit" 
+                className="bg-primary hover:bg-blue-700 text-white py-2 px-4 rounded"
+              >
+                Ответить
+              </button>
+              <button 
+                type="button" 
+                onClick={loadRandomTask} 
+                className="bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 py-2 px-4 rounded"
+              >
+                Другая задача
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : (
+        <div className="w-full max-w-md bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6 text-center">
+          <h2 className="text-xl mb-4">🎉 Поздравляем! 🎉</h2>
+          <p className="mb-4">Вы решили все задачи!</p>
+          <button 
+            onClick={resetProgress} 
+            className="bg-primary hover:bg-blue-700 text-white py-2 px-4 rounded"
+          >
+            Начать сначала
+          </button>
+        </div>
+      )}
+    </main>
+  )
 }
