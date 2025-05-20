@@ -1,45 +1,71 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@supabase/supabase-js'
 import { Task } from '../types/task'
+import { getTasks } from '../lib/supabase'
 
-// Заглушка для базы данных, пока не настроен Supabase
-const MOCK_TASKS: Task[] = [
+// Резервные задачи на случай ошибки с Supabase
+const FALLBACK_TASKS: Task[] = [
   { id: 1, text: 'Решите задачу: 2 + 2 * 2 = ?', answer: 6 },
   { id: 2, text: 'Вычислите значение: 5! / 3! = ?', answer: 20 },
   { id: 3, text: 'Найдите сумму: 1 + 2 + 3 + ... + 10 = ?', answer: 55 },
 ]
 
 export default function Home() {
-  const [tasks, setTasks] = useState<Task[]>(MOCK_TASKS)
+  const [tasks, setTasks] = useState<Task[]>([])
   const [currentTask, setCurrentTask] = useState<Task | null>(null)
   const [userAnswer, setUserAnswer] = useState('')
   const [message, setMessage] = useState('')
   const [solvedTaskIds, setSolvedTaskIds] = useState<number[]>([])
   const [progress, setProgress] = useState(0)
   const [isDarkMode, setIsDarkMode] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
-  // Функция для загрузки данных из localStorage при первом рендеринге
+  // Функция для загрузки данных при первом рендеринге
   useEffect(() => {
-    const savedSolvedTaskIds = localStorage.getItem('solvedTaskIds')
-    if (savedSolvedTaskIds) {
-      const parsedIds = JSON.parse(savedSolvedTaskIds)
-      setSolvedTaskIds(parsedIds)
-      setProgress(Math.round((parsedIds.length / tasks.length) * 100))
+    async function initialize() {
+      try {
+        // Загружаем задачи из Supabase
+        const supabaseTasks = await getTasks()
+        
+        // Если задачи получены успешно, используем их, иначе - резервные
+        const loadedTasks = supabaseTasks.length > 0 ? supabaseTasks : FALLBACK_TASKS
+        setTasks(loadedTasks)
+        
+        // Загружаем прогресс из localStorage
+        const savedSolvedTaskIds = localStorage.getItem('solvedTaskIds')
+        let parsedIds: number[] = []
+        if (savedSolvedTaskIds) {
+          parsedIds = JSON.parse(savedSolvedTaskIds)
+          setSolvedTaskIds(parsedIds)
+          setProgress(Math.round((parsedIds.length / loadedTasks.length) * 100))
+        }
+
+        // Проверяем тему
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+        setIsDarkMode(prefersDark)
+        if (prefersDark) {
+          document.documentElement.classList.add('dark')
+        }
+        
+        // Загружаем первую задачу
+        await loadRandomTask(loadedTasks, parsedIds)
+        
+      } catch (error) {
+        console.error('Ошибка инициализации:', error)
+        setTasks(FALLBACK_TASKS)
+        await loadRandomTask(FALLBACK_TASKS, [])
+      } finally {
+        setIsLoading(false)
+      }
     }
-
-    // Проверка предпочитаемой темы
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    setIsDarkMode(prefersDark)
-
-    // Загрузка первой задачи
-    loadRandomTask()
+    
+    initialize()
   }, [])
 
   // Загрузка случайной задачи, которую пользователь еще не решил
-  const loadRandomTask = () => {
-    const unsolvedTasks = tasks.filter(task => !solvedTaskIds.includes(task.id))
+  const loadRandomTask = async (taskList = tasks, solvedIds = solvedTaskIds) => {
+    const unsolvedTasks = taskList.filter(task => !solvedIds.includes(task.id))
     
     if (unsolvedTasks.length === 0) {
       // Все задачи решены
@@ -73,7 +99,7 @@ export default function Home() {
       setMessage('Правильно!')
       
       // Загружаем следующую задачу через секунду
-      setTimeout(loadRandomTask, 1000)
+      setTimeout(() => loadRandomTask(), 1000)
     } else {
       setMessage('Неправильно. Попробуйте еще раз или перейдите к другой задаче.')
     }
@@ -125,7 +151,11 @@ export default function Home() {
         <p className="text-center mt-2">Прогресс: {progress}%</p>
       </div>
 
-      {currentTask ? (
+      {isLoading ? (
+        <div className="w-full max-w-md bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6 text-center">
+          <p>Загрузка задач...</p>
+        </div>
+      ) : currentTask ? (
         <div className="w-full max-w-md bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
           <p className="text-lg mb-4">{currentTask.text}</p>
           
@@ -157,7 +187,7 @@ export default function Home() {
               </button>
               <button 
                 type="button" 
-                onClick={loadRandomTask} 
+                onClick={() => loadRandomTask()} 
                 className="bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 py-2 px-4 rounded"
               >
                 Другая задача
