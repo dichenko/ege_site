@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ЕГЭ Тренажер Excel
 
-## Getting Started
+Интерактивный тренажер для подготовки к заданиям ЕГЭ с использованием Excel.
 
-First, run the development server:
+## Настройка проекта
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### Требования
+- Node.js 16+
+- npm 
+- Supabase аккаунт
+
+### Установка
+
+1. Клонируйте репозиторий:
+```
+git clone https://github.com/dichenko/ege_site.git
+cd ege_site
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Установите зависимости:
+```
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Создайте проект в Supabase:
+- Перейдите на [supabase.com](https://supabase.com) и создайте новый проект
+- Запишите URL и anon key проекта
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Настройте базу данных Supabase:
+- Откройте SQL редактор в проекте Supabase
+- Выполните SQL-скрипт из файла `supabase-setup.sql`
 
-## Learn More
+5. Настройте переменные окружения:
+- Создайте файл `.env.local` и добавьте:
+```
+NEXT_PUBLIC_SUPABASE_URL=ваш_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=ваш_anon_key
+```
 
-To learn more about Next.js, take a look at the following resources:
+6. Запустите проект локально:
+```
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Интеграция с Vercel
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Создайте новый проект в Vercel:
+- Импортируйте репозиторий из GitHub
+- Нажмите кнопку "Open in Supabase" в настройках проекта Vercel
+- Переменные окружения будут добавлены автоматически
 
-## Deploy on Vercel
+## Структура приложения
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `/src/app/page.tsx` - Главная страница с тренажером
+- `/src/app/ege/page.tsx` - Страница со списком всех задач
+- `/src/utils/supabase/` - Интеграция с Supabase
+- `/src/types/` - TypeScript типы 
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Решение проблем
+
+### Если задачи не загружаются:
+
+1. Проверьте, что таблица `ege9` создана в Supabase
+2. Убедитесь, что настроена политика Row Level Security (RLS)
+3. Проверьте структуру таблицы (поля `id`, `text`, `answer`)
+4. Проверьте переменные окружения
+
+### Тестирование подключения к Supabase
+
+Для проверки подключения:
+1. Откройте `/ege` страницу вашего приложения
+2. Проверьте консоль разработчика на наличие ошибок
+3. Если отображается ошибка, следуйте инструкциям на странице
