@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { Task } from '../types/task'
 import { getTasks } from '../lib/supabase'
 
@@ -170,6 +171,15 @@ export default function Home() {
       <h1 className="text-2xl md:text-3xl font-bold mb-6 text-center">
         Тренажер задач ЕГЭ по Excel
       </h1>
+
+      <div className="flex gap-4 mb-8">
+        <Link 
+          href="/ege" 
+          className="px-4 py-2 bg-primary text-white rounded hover:bg-blue-700"
+        >
+          Просмотреть все задачи
+        </Link>
+      </div>
 
       <div className="w-full max-w-md mb-6">
         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4">
