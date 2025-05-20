@@ -2,6 +2,8 @@ import { createClient } from '@/utils/supabase/server'
 import { Database } from '@/types/database.types'
 import Link from 'next/link'
 
+const SQL_SCRIPT = `-- Создание таблицы ege9\ncreate table if not exists public.ege9 (\n  id bigint primary key generated always as identity,\n  text text not null,\n  answer integer not null\n);\n\n-- Вставка примеров задач\ninsert into public.ege9 (text, answer) values\n  ('Решите задачу: 2 + 2 * 2 = ?', 6),\n  ('Вычислите значение: 5! / 3! = ?', 20);\n\n-- Включить RLS и разрешить анонимное чтение\nalter table public.ege9 enable row level security;\ncreate policy if not exists "Allow anonymous read access" on public.ege9 for select to anon using (true);`
+
 type Task = Database['public']['Tables']['ege9']['Row']
 
 export default async function Home() {
@@ -9,17 +11,13 @@ export default async function Home() {
   const { data: tasks, error } = await supabase.from('ege9').select()
 
   let content = null
-  if (error) {
-    content = (
-      <div className="p-4 bg-red-100 dark:bg-red-900 border border-red-400 text-red-700 dark:text-red-200 rounded mb-4">
-        <p className="font-bold">Ошибка загрузки задач:</p>
-        <p>{error.message}</p>
-      </div>
-    )
-  } else if (!tasks || tasks.length === 0) {
+  if (error || !tasks || tasks.length === 0) {
     content = (
       <div className="p-4 bg-yellow-100 dark:bg-yellow-900 border border-yellow-400 text-yellow-700 dark:text-yellow-200 rounded mb-4">
-        <p>Задачи не найдены. Проверьте таблицу ege9 в Supabase.</p>
+        <p className="font-bold mb-2">Задачи не найдены или таблица ege9 отсутствует.</p>
+        <p className="mb-2">Для работы приложения выполните этот SQL-скрипт в <a href='https://app.supabase.com/project/_/sql' target='_blank' className='underline'>SQL Editor Supabase</a>:</p>
+        <pre className="p-2 bg-gray-100 dark:bg-gray-800 rounded overflow-x-auto text-xs mb-2 whitespace-pre-wrap">{SQL_SCRIPT}</pre>
+        <p className="text-sm text-gray-600 dark:text-gray-400">После выполнения скрипта обновите страницу.</p>
       </div>
     )
   } else {
