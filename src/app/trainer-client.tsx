@@ -61,43 +61,43 @@ export default function Trainer({ tasks }: { tasks: Task[] }) {
   return (
     <>
       <div className="w-full max-w-md mb-6">
-        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4">
+        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 shadow-inner">
           <div
-            className="bg-primary h-4 rounded-full transition-all duration-500"
+            className="bg-blue-500 dark:bg-blue-400 h-4 rounded-full transition-all duration-500 shadow"
             style={{ width: `${progress}%` }}
           ></div>
         </div>
-        <p className="text-center mt-2">Прогресс: {progress}%</p>
+        <p className="text-center mt-2 text-gray-700 dark:text-gray-200 font-medium">Прогресс: {progress}%</p>
       </div>
       {currentTask ? (
-        <div className="w-full max-w-md bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
-          <p className="text-lg mb-4">Откройте файл электронной таблицы, содержащей в каждой строке восемь натуральных чисел. Определите количество строк таблицы, для чисел которых выполнено условие: {currentTask.text}</p>
+        <div className="w-full max-w-md bg-white/90 dark:bg-gray-900/90 shadow-2xl rounded-2xl p-6 md:p-8 flex flex-col gap-4 animate-fade-in">
+          <p className="text-lg md:text-xl mb-4 font-semibold text-gray-900 dark:text-white leading-relaxed">Откройте файл электронной таблицы, содержащей в каждой строке восемь натуральных чисел. Определите количество строк таблицы, для чисел которых выполнено условие: <span className='font-normal'>{currentTask.text}</span></p>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="answer" className="block mb-2">Ваш ответ:</label>
+              <label htmlFor="answer" className="block mb-2 text-gray-700 dark:text-gray-300 font-medium">Ваш ответ:</label>
               <input
                 id="answer"
                 type="number"
                 value={userAnswer}
                 onChange={(e) => setUserAnswer(e.target.value)}
-                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded"
+                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-800 dark:text-white transition"
                 required
               />
             </div>
             {message && (
-              <p className={message.includes("Правильно") ? "text-green-500" : "text-red-500"}>{message}</p>
+              <p className={message.includes("Правильно") ? "text-green-600 dark:text-green-400 font-semibold" : "text-red-600 dark:text-red-400 font-semibold"}>{message}</p>
             )}
-            <div className="flex gap-2">
+            <div className="flex gap-2 justify-between">
               <button
                 type="submit"
-                className="bg-primary hover:bg-blue-700 text-white py-2 px-4 rounded"
+                className="bg-blue-500 hover:bg-blue-600 dark:bg-blue-700 dark:hover:bg-blue-600 text-white py-2 px-6 rounded-lg font-bold shadow transition-colors"
               >
                 Затащить
               </button>
               <button
                 type="button"
                 onClick={() => loadRandomTask()}
-                className="bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 py-2 px-4 rounded"
+                className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 py-2 px-6 rounded-lg font-bold shadow transition-colors"
               >
                 Скипнуть
               </button>
@@ -105,12 +105,12 @@ export default function Trainer({ tasks }: { tasks: Task[] }) {
           </form>
         </div>
       ) : (
-        <div className="w-full max-w-md bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6 text-center">
-          <h2 className="text-xl mb-4">🎉 Поздравляем! 🎉</h2>
-          <p className="mb-4">Вы решили все задачи!</p>
+        <div className="w-full max-w-md bg-white/90 dark:bg-gray-900/90 shadow-2xl rounded-2xl p-6 md:p-8 text-center animate-fade-in">
+          <h2 className="text-2xl md:text-3xl mb-4 font-extrabold text-blue-600 dark:text-blue-400">🎉 Поздравляем! 🎉</h2>
+          <p className="mb-4 text-lg text-gray-800 dark:text-gray-200">Вы решили все задачи!</p>
           <button
             onClick={resetProgress}
-            className="bg-primary hover:bg-blue-700 text-white py-2 px-4 rounded"
+            className="bg-blue-500 hover:bg-blue-600 dark:bg-blue-700 dark:hover:bg-blue-600 text-white py-2 px-6 rounded-lg font-bold shadow transition-colors"
           >
             Начать сначала
           </button>

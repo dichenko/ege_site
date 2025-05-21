@@ -1,6 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
 import { Database } from '@/types/database.types'
-import Link from 'next/link'
 import Trainer from './trainer-client'
 import ThemeToggle from './theme-toggle'
 
@@ -13,20 +12,24 @@ export default async function Home() {
   const { data: tasks, error } = await supabase.from('ege9').select()
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-4 md:p-8 lg:p-12">
-      <div className="fixed top-4 right-4 flex items-center gap-4">
+    <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900 transition-colors duration-500">
+      <div className="fixed top-4 right-4 flex items-center gap-4 z-10">
         <ThemeToggle />
-        <a href="/Excel-Tasks.xlsx" download className="p-2 rounded-full bg-green-500 text-white hover:bg-green-600">📊</a>
+        <a href="/Excel-Tasks.xlsx" download className="p-2 rounded-full bg-green-500 text-white hover:bg-green-600 shadow-lg transition-colors" title="Скачать Excel-файл">📊</a>
       </div>
-      <h1 className="text-2xl md:text-3xl font-bold mb-6 text-center">ЕГЭ по инфе, задача №9</h1>
-      {error || !tasks || tasks.length === 0 ? (
-        <div className="p-4 bg-yellow-100 dark:bg-yellow-900 border border-yellow-400 text-yellow-700 dark:text-yellow-200 rounded mb-4">
-          <p className="font-bold mb-2">Задачи не найдены или таблица ege9 отсутствует.</p>
-          <p>Проверьте настройки Supabase.</p>
+      <div className="w-full max-w-2xl px-4 py-8">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-center mb-8 text-gray-900 dark:text-white drop-shadow-lg">ЕГЭ по информатике: Задача №9</h1>
+        <div className="bg-white/80 dark:bg-gray-800/80 rounded-2xl shadow-2xl p-6 md:p-10 backdrop-blur-md">
+          {error || !tasks || tasks.length === 0 ? (
+            <div className="p-4 bg-yellow-100 dark:bg-yellow-900 border border-yellow-400 text-yellow-700 dark:text-yellow-200 rounded mb-4 text-center">
+              <p className="font-bold mb-2">Задачи не найдены или таблица ege9 отсутствует.</p>
+              <p>Проверьте настройки Supabase.</p>
+            </div>
+          ) : (
+            <Trainer tasks={tasks} />
+          )}
         </div>
-      ) : (
-        <Trainer tasks={tasks} />
-      )}
+      </div>
     </main>
   )
 }
