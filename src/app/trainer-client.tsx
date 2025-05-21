@@ -71,7 +71,7 @@ export default function Trainer({ tasks }: { tasks: Task[] }) {
       </div>
       {currentTask ? (
         <div className="w-full max-w-md bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
-          <p className="text-lg mb-4">{currentTask.text}</p>
+          <p className="text-lg mb-4">Откройте файл электронной таблицы, содержащей в каждой строке восемь натуральных чисел. Определите количество строк таблицы, для чисел которых выполнено условие: {currentTask.text}</p>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="answer" className="block mb-2">Ваш ответ:</label>
