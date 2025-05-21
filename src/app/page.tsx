@@ -19,9 +19,6 @@ export default async function Home() {
         <a href="/Excel-Tasks.xlsx" download className="p-2 rounded-full bg-green-500 text-white hover:bg-green-600">📊</a>
       </div>
       <h1 className="text-2xl md:text-3xl font-bold mb-6 text-center">Тренажер задач ЕГЭ по Excel</h1>
-      <div className="flex gap-4 mb-8">
-        <Link href="/ege" className="px-4 py-2 bg-primary text-white rounded hover:bg-blue-700">Просмотреть все задачи</Link>
-      </div>
       {error || !tasks || tasks.length === 0 ? (
         <div className="p-4 bg-yellow-100 dark:bg-yellow-900 border border-yellow-400 text-yellow-700 dark:text-yellow-200 rounded mb-4">
           <p className="font-bold mb-2">Задачи не найдены или таблица ege9 отсутствует.</p>
