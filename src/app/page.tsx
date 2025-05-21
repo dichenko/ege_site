@@ -15,6 +15,9 @@ export default async function Home() {
     <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900 transition-colors duration-500">
       <div className="fixed top-4 right-4 flex items-center gap-4 z-10">
         <ThemeToggle />
+        <a href="https://docs.google.com/spreadsheets/d/1VioaO7HN5oghStZKfPpGivCNJUQwsIMLKOYRia5sKRI/edit?usp=sharing" target="_blank" rel="noopener noreferrer" className="p-2 rounded-full bg-green-600 text-white hover:bg-green-700 shadow-lg transition-colors flex items-center justify-center" title="Открыть Google-таблицу">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 mr-1"><path d="M19.6 3.2c-.2-.2-.5-.2-.7-.2H7.5c-.6 0-1 .4-1 1v2.5H4.1c-.6 0-1 .4-1 1v13c0 .6.4 1 1 1h13c.6 0 1-.4 1-1v-2.4h2.4c.6 0 1-.4 1-1V3.9c0-.2 0-.5-.2-.7zM17.6 19.6c0 .2-.2.4-.4.4H4.8c-.2 0-.4-.2-.4-.4V7.5c0-.2.2-.4.4-.4h2.4v9.4c0 .6.4 1 1 1h9.4v2.1zm3.1-3.1c0 .2-.2.4-.4.4h-13c-.2 0-.4-.2-.4-.4V4.8c0-.2.2-.4.4-.4h11.1c.2 0 .4.2.4.4v11.7z"/></svg>
+        </a>
         <a href="/Excel-Tasks.xlsx" download className="p-2 rounded-full bg-green-500 text-white hover:bg-green-600 shadow-lg transition-colors" title="Скачать Excel-файл">📊</a>
       </div>
       <header className="w-full flex flex-col items-center mt-8 mb-4">
