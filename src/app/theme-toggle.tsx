@@ -17,6 +17,7 @@ export default function ThemeToggle() {
       }}
       className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
       aria-label="Переключить тему"
+      title={isDark ? "Светлая тема" : "Темная тема"}
     >
       <div className="relative w-6 h-6">
         <div className={`absolute inset-0 transform transition-transform duration-200 ${isDark ? 'rotate-90 opacity-0' : 'rotate-0 opacity-100'}`}>

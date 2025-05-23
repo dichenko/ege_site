@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import ThemeToggle from '@/app/theme-toggle'
+import { UserCircle2 } from 'lucide-react'
 
 export default function Header() {
   return (
@@ -8,7 +9,15 @@ export default function Header() {
         <Link href="/" className="text-2xl font-extrabold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">
           Егэшечная
         </Link>
-        <ThemeToggle />
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <button 
+            className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
+            title="Авторизоваться"
+          >
+            <UserCircle2 className="w-6 h-6 text-gray-600 dark:text-gray-300" />
+          </button>
+        </div>
       </div>
     </header>
   )
