@@ -1,13 +1,41 @@
-import { createClient } from '@/utils/supabase/server'
+'use client';
+
+import { useEffect, useState } from 'react'
+import { createClient } from '@supabase/supabase-js'
 import { Database } from '@/types/database.types'
 import Trainer from '@/app/trainer-client'
 import Header from '@/components/Header'
 
 type Task = Database['public']['Tables']['ege9']['Row']
 
-export default async function Task9Page() {
-  const supabase = await createClient()
-  const { data: tasks, error } = await supabase.from('ege9').select()
+// Создаем Supabase клиент для клиентского компонента
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+)
+
+export default function Task9Page() {
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function loadTasks() {
+      try {
+        const { data, error } = await supabase.from('ege9').select()
+        if (error) {
+          throw error
+        }
+        setTasks(data || [])
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Ошибка загрузки задач')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadTasks()
+  }, [])
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900 transition-colors duration-500">
@@ -17,10 +45,15 @@ export default async function Task9Page() {
           Задание №9: Анализ таблиц Excel
         </h1>
         <div className="relative">
-          {error || !tasks || tasks.length === 0 ? (
+          {isLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+            </div>
+          ) : error || tasks.length === 0 ? (
             <div className="p-4 bg-yellow-100 dark:bg-yellow-900 border border-yellow-400 text-yellow-700 dark:text-yellow-200 rounded mb-4 text-center">
               <p className="font-bold mb-2">Задачи не найдены или таблица ege9 отсутствует.</p>
               <p>Проверьте настройки Supabase.</p>
+              {error && <p className="mt-2 text-sm">Ошибка: {error}</p>}
             </div>
           ) : (
             <>
