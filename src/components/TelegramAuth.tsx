@@ -16,21 +16,27 @@ interface TelegramAuthProps {
 export default function TelegramAuth({ onSuccess }: TelegramAuthProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string>('');
 
   useEffect(() => {
+    const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME;
+    setDebugInfo(`Bot Username: ${botUsername || 'не установлен'}`);
+
     // Загружаем Telegram Widget скрипт
     const script = document.createElement('script');
     script.src = 'https://telegram.org/js/telegram-widget.js?22';
-    script.setAttribute('data-telegram-login', process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || '');
+    script.setAttribute('data-telegram-login', botUsername || '');
     script.setAttribute('data-size', 'large');
     script.setAttribute('data-onauth', 'onTelegramAuth(user)');
     script.setAttribute('data-request-access', 'write');
     script.setAttribute('data-radius', '8');
+    script.setAttribute('data-auth-url', window.location.origin);
     
     // Глобальная функция для обработки авторизации
     (window as any).onTelegramAuth = async (user: any) => {
       setIsLoading(true);
       setError(null);
+      setDebugInfo(prev => `${prev}\nПолучены данные от Telegram: ${JSON.stringify(user)}`);
       
       try {
         const response = await fetch('/api/auth/telegram', {
@@ -40,6 +46,7 @@ export default function TelegramAuth({ onSuccess }: TelegramAuthProps) {
         });
 
         const result = await response.json();
+        setDebugInfo(prev => `${prev}\nОтвет сервера: ${JSON.stringify(result)}`);
         
         if (result.success) {
           // Сохраняем данные пользователя
@@ -59,6 +66,7 @@ export default function TelegramAuth({ onSuccess }: TelegramAuthProps) {
       } catch (error) {
         console.error('Ошибка авторизации:', error);
         setError('Ошибка подключения к серверу');
+        setDebugInfo(prev => `${prev}\nОшибка: ${error}`);
       } finally {
         setIsLoading(false);
       }
@@ -100,6 +108,11 @@ export default function TelegramAuth({ onSuccess }: TelegramAuthProps) {
             </div>
           )}
           <div id="telegram-login" className="mt-2"></div>
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mt-4 p-2 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono whitespace-pre-wrap">
+              {debugInfo}
+            </div>
+          )}
         </>
       )}
     </div>
