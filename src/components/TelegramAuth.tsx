@@ -13,10 +13,15 @@ interface TelegramAuthProps {
   onSuccess: () => void;
 }
 
+declare global {
+  interface Window {
+    onTelegramAuth?: (user: any) => void;
+  }
+}
+
 export default function TelegramAuth({ onSuccess }: TelegramAuthProps) {
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [widgetLoaded, setWidgetLoaded] = useState(false);
+  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
 
   useEffect(() => {
     const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME;
@@ -26,14 +31,15 @@ export default function TelegramAuth({ onSuccess }: TelegramAuthProps) {
       return;
     }
 
-    // Очищаем контейнер
-    const container = document.getElementById('telegram-login');
-    if (container) {
-      container.innerHTML = '';
+    // Проверяем, не загружен ли уже скрипт
+    if (document.querySelector('script[src*="telegram-widget.js"]')) {
+      setIsScriptLoaded(true);
+      return;
     }
 
-    // Создаем новый скрипт
+    // Загружаем скрипт Telegram
     const script = document.createElement('script');
+    script.async = true;
     script.src = 'https://telegram.org/js/telegram-widget.js?22';
     script.setAttribute('data-telegram-login', botUsername);
     script.setAttribute('data-size', 'large');
@@ -43,25 +49,32 @@ export default function TelegramAuth({ onSuccess }: TelegramAuthProps) {
     script.setAttribute('data-radius', '8');
     
     script.onload = () => {
-      setWidgetLoaded(true);
+      setIsScriptLoaded(true);
     };
 
     script.onerror = () => {
       setError('Не удалось загрузить виджет Telegram');
     };
 
-    if (container) {
-      container.appendChild(script);
-    }
+    document.head.appendChild(script);
 
     return () => {
-      // Просто очищаем контейнер, не трогаем скрипты напрямую
-      const cont = document.getElementById('telegram-login');
-      if (cont) {
-        cont.innerHTML = '';
-      }
+      // Cleanup при размонтировании компонента
     };
   }, []);
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md">
+        <h2 className="text-xl font-semibold text-gray-800 dark:text-white text-center">
+          Войти через Telegram
+        </h2>
+        <div className="text-red-500 text-sm text-center p-3 bg-red-50 dark:bg-red-900/20 rounded border border-red-200">
+          {error}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center justify-center gap-4 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md">
@@ -72,27 +85,22 @@ export default function TelegramAuth({ onSuccess }: TelegramAuthProps) {
         Авторизуйтесь, чтобы сохранять свой прогресс между устройствами
       </p>
       
-      {error && (
-        <div className="text-red-500 text-sm text-center p-3 bg-red-50 dark:bg-red-900/20 rounded border border-red-200">
-          {error}
-        </div>
-      )}
-
-      {!error && (
-        <div className="flex flex-col items-center gap-3">
-          <div id="telegram-login" className="min-h-[50px] flex items-center justify-center">
-            {!widgetLoaded && (
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-            )}
-          </div>
-          
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mt-4 p-2 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">
-              Bot: {process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'НЕ УСТАНОВЛЕН'}
-            </div>
+      <div className="flex flex-col items-center gap-3">
+        <div className="min-h-[50px] flex items-center justify-center">
+          {!isScriptLoaded && (
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
           )}
+          {/* Telegram виджет будет добавлен автоматически после загрузки скрипта */}
         </div>
-      )}
+        
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mt-4 p-2 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">
+            Bot: {process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'НЕ УСТАНОВЛЕН'}
+            <br />
+            URL: {window.location.origin}/api/auth/telegram/callback
+          </div>
+        )}
+      </div>
     </div>
   );
 } 

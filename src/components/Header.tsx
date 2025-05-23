@@ -4,7 +4,18 @@ import Link from 'next/link'
 import ThemeToggle from '@/app/theme-toggle'
 import { UserCircle2, LogOut } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import TelegramAuth from './TelegramAuth'
+import dynamic from 'next/dynamic'
+
+// Динамический импорт без SSR
+const TelegramAuth = dynamic(() => import('./TelegramAuth'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex flex-col items-center justify-center gap-4 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      <p className="text-sm text-gray-600 dark:text-gray-400">Загрузка...</p>
+    </div>
+  )
+});
 
 export default function Header() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
