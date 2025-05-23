@@ -27,5 +27,31 @@ FOR SELECT
 TO anon
 USING (true);
 
+-- Создание таблицы user_profiles для хранения профилей пользователей
+DROP TABLE IF EXISTS public.user_profiles;
+
+CREATE TABLE public.user_profiles (
+  id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  user_hash VARCHAR(64) UNIQUE NOT NULL,
+  photo_url TEXT,
+  first_name TEXT,
+  username TEXT,
+  solved_tasks INTEGER[] DEFAULT '{}',
+  total_attempts INTEGER DEFAULT 0,
+  total_errors INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT NOW(),
+  last_active TIMESTAMP DEFAULT NOW()
+);
+
+-- Активируем Row Level Security для user_profiles
+ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
+
+-- Создаем политику для сервисного ключа (используется в API)
+CREATE POLICY "Allow service role full access" 
+ON public.user_profiles
+FOR ALL 
+TO service_role
+USING (true);
+
 -- Вывод содержимого таблицы для проверки
 SELECT * FROM public.ege9; 

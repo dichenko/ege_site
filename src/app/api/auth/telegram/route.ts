@@ -11,6 +11,7 @@ interface TelegramAuthData {
   id: number;
   first_name?: string;
   username?: string;
+  photo_url?: string;
   auth_date: number;
   hash: string;
 }
@@ -48,12 +49,28 @@ export async function POST(request: NextRequest) {
         .from('user_profiles')
         .insert({
           user_hash: userHash,
+          photo_url: authData.photo_url,
+          first_name: authData.first_name,
+          username: authData.username,
           solved_tasks: [],
           total_attempts: 0,
           total_errors: 0
         });
       
       if (insertError) throw insertError;
+    } else {
+      // Обновляем данные существующего пользователя (фото могло измениться)
+      const { error: updateError } = await supabase
+        .from('user_profiles')
+        .update({
+          photo_url: authData.photo_url,
+          first_name: authData.first_name,
+          username: authData.username,
+          last_active: new Date().toISOString()
+        })
+        .eq('user_hash', userHash);
+      
+      if (updateError) throw updateError;
     }
 
     // Получаем актуальные данные пользователя
