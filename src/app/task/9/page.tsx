@@ -8,9 +8,24 @@ import Header from '@/components/Header'
 
 type Task = Database['public']['Tables']['ege9']['Row']
 
+// Формируем Supabase URL из POSTGRES_HOST
+const getSupabaseUrl = () => {
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    return process.env.NEXT_PUBLIC_SUPABASE_URL;
+  }
+  // Если есть POSTGRES_HOST, формируем URL из него
+  const postgresHost = process.env.POSTGRES_HOST || '';
+  if (postgresHost) {
+    // Убираем порт и добавляем https://
+    const host = postgresHost.replace(/:.*$/, '').replace(/^.*@/, '');
+    return `https://${host}`;
+  }
+  return '';
+};
+
 // Создаем Supabase клиент для клиентского компонента
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  getSupabaseUrl(),
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 )
 

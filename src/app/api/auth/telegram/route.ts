@@ -2,11 +2,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 
-// Правильно формируем Supabase URL
-const supabaseUrl = `https://${process.env.POSTGRES_HOST?.replace(/^.*@/, '').replace(/:.*$/, '')}.supabase.co` || process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || '';
+// Функция для получения Supabase URL
+const getSupabaseUrl = () => {
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    return process.env.NEXT_PUBLIC_SUPABASE_URL;
+  }
+  // Если есть POSTGRES_HOST, формируем URL из него
+  const postgresHost = process.env.POSTGRES_HOST || '';
+  if (postgresHost) {
+    // Убираем порт и добавляем https://
+    const host = postgresHost.replace(/:.*$/, '').replace(/^.*@/, '');
+    return `https://${host}`;
+  }
+  return '';
+};
 
-const supabase = createClient(supabaseUrl || '', supabaseKey);
+const supabase = createClient(
+  getSupabaseUrl(),
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || ''
+);
 
 interface TelegramAuthData {
   id: number;
