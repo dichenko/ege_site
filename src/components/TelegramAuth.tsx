@@ -26,17 +26,20 @@ export default function TelegramAuth({ onSuccess }: TelegramAuthProps) {
       return;
     }
 
-    // Очищаем предыдущий виджет
+    // Очищаем контейнер
     const container = document.getElementById('telegram-login');
     if (container) {
-      container.innerHTML = '';
+      while (container.firstChild) {
+        container.removeChild(container.firstChild);
+      }
     }
 
-    // Удаляем предыдущие скрипты
-    const existingScript = document.querySelector('script[data-telegram-login]');
-    if (existingScript) {
-      existingScript.remove();
-    }
+    // Удаляем только скрипты, которые реально есть в DOM
+    document.querySelectorAll('script[data-telegram-login]').forEach((el) => {
+      if (el.parentNode) {
+        el.parentNode.removeChild(el);
+      }
+    });
 
     // Создаем новый скрипт
     const script = document.createElement('script');
@@ -61,11 +64,19 @@ export default function TelegramAuth({ onSuccess }: TelegramAuthProps) {
     }
 
     return () => {
-      delete (window as any).onTelegramAuth;
-      const scriptElement = document.querySelector('script[data-telegram-login]');
-      if (scriptElement) {
-        scriptElement.remove();
+      // Корректно очищаем контейнер
+      const cont = document.getElementById('telegram-login');
+      if (cont) {
+        while (cont.firstChild) {
+          cont.removeChild(cont.firstChild);
+        }
       }
+      // Удаляем только скрипты, которые реально есть в DOM
+      document.querySelectorAll('script[data-telegram-login]').forEach((el) => {
+        if (el.parentNode) {
+          el.parentNode.removeChild(el);
+        }
+      });
     };
   }, []);
 
