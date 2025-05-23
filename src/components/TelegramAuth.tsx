@@ -16,64 +16,46 @@ interface TelegramAuthProps {
 export default function TelegramAuth({ onSuccess }: TelegramAuthProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<string>('');
+  const [widgetLoaded, setWidgetLoaded] = useState(false);
 
   useEffect(() => {
     const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME;
-    setDebugInfo(`Bot Username: ${botUsername || 'не установлен'}`);
+    
+    if (!botUsername) {
+      setError('Бот не настроен. Обратитесь к администратору.');
+      return;
+    }
 
-    // Загружаем Telegram Widget скрипт
+    // Очищаем предыдущий виджет
+    const container = document.getElementById('telegram-login');
+    if (container) {
+      container.innerHTML = '';
+    }
+
+    // Удаляем предыдущие скрипты
+    const existingScript = document.querySelector('script[data-telegram-login]');
+    if (existingScript) {
+      existingScript.remove();
+    }
+
+    // Создаем новый скрипт
     const script = document.createElement('script');
     script.src = 'https://telegram.org/js/telegram-widget.js?22';
-    script.setAttribute('data-telegram-login', botUsername || '');
+    script.setAttribute('data-telegram-login', botUsername);
     script.setAttribute('data-size', 'large');
-    script.setAttribute('data-onauth', 'onTelegramAuth(user)');
+    script.setAttribute('data-auth-url', `${window.location.origin}/api/auth/telegram/callback`);
     script.setAttribute('data-request-access', 'write');
+    script.setAttribute('data-userpic', 'true');
     script.setAttribute('data-radius', '8');
-    script.setAttribute('data-auth-url', window.location.origin);
     
-    // Глобальная функция для обработки авторизации
-    (window as any).onTelegramAuth = async (user: any) => {
-      setIsLoading(true);
-      setError(null);
-      setDebugInfo(prev => `${prev}\nПолучены данные от Telegram: ${JSON.stringify(user)}`);
-      
-      try {
-        const response = await fetch('/api/auth/telegram', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(user)
-        });
-
-        const result = await response.json();
-        setDebugInfo(prev => `${prev}\nОтвет сервера: ${JSON.stringify(result)}`);
-        
-        if (result.success) {
-          // Сохраняем данные пользователя
-          localStorage.setItem('userHash', result.userHash);
-          localStorage.setItem('userPhoto', result.userData.photo_url || '');
-          localStorage.setItem('userName', result.userData.first_name || result.userData.username || '');
-          
-          // Обновляем прогресс из базы данных
-          if (result.userData.solved_tasks) {
-            localStorage.setItem('solvedTasks', JSON.stringify(result.userData.solved_tasks));
-          }
-          
-          onSuccess();
-        } else {
-          setError('Ошибка авторизации: ' + (result.error || 'Неизвестная ошибка'));
-        }
-      } catch (error) {
-        console.error('Ошибка авторизации:', error);
-        setError('Ошибка подключения к серверу');
-        setDebugInfo(prev => `${prev}\nОшибка: ${error}`);
-      } finally {
-        setIsLoading(false);
-      }
+    script.onload = () => {
+      setWidgetLoaded(true);
     };
 
-    // Добавляем скрипт на страницу
-    const container = document.getElementById('telegram-login');
+    script.onerror = () => {
+      setError('Не удалось загрузить виджет Telegram');
+    };
+
     if (container) {
       container.appendChild(script);
     }
@@ -85,35 +67,37 @@ export default function TelegramAuth({ onSuccess }: TelegramAuthProps) {
         scriptElement.remove();
       }
     };
-  }, [onSuccess]);
+  }, []);
 
   return (
     <div className="flex flex-col items-center justify-center gap-4 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md">
-      {isLoading ? (
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Авторизация...</p>
+      <h2 className="text-xl font-semibold text-gray-800 dark:text-white text-center">
+        Войти через Telegram
+      </h2>
+      <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+        Авторизуйтесь, чтобы сохранять свой прогресс между устройствами
+      </p>
+      
+      {error && (
+        <div className="text-red-500 text-sm text-center p-3 bg-red-50 dark:bg-red-900/20 rounded border border-red-200">
+          {error}
         </div>
-      ) : (
-        <>
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-white text-center">
-            Войти через Telegram
-          </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
-            Авторизуйтесь, чтобы сохранять свой прогресс между устройствами
-          </p>
-          {error && (
-            <div className="text-red-500 text-sm text-center p-2 bg-red-50 dark:bg-red-900/20 rounded">
-              {error}
-            </div>
-          )}
-          <div id="telegram-login" className="mt-2"></div>
+      )}
+
+      {!error && (
+        <div className="flex flex-col items-center gap-3">
+          <div id="telegram-login" className="min-h-[50px] flex items-center justify-center">
+            {!widgetLoaded && (
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            )}
+          </div>
+          
           {process.env.NODE_ENV === 'development' && (
-            <div className="mt-4 p-2 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono whitespace-pre-wrap">
-              {debugInfo}
+            <div className="mt-4 p-2 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">
+              Bot: {process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'НЕ УСТАНОВЛЕН'}
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );

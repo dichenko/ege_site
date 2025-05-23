@@ -24,6 +24,20 @@ export default function Header() {
 
   useEffect(() => {
     checkAuthStatus();
+
+    // Слушаем события от окна авторизации
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.type === 'telegram_auth_success') {
+        checkAuthStatus();
+        setIsAuthOpen(false);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
   }, []);
 
   const handleLogout = () => {
