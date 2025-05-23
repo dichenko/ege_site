@@ -29,17 +29,8 @@ export default function TelegramAuth({ onSuccess }: TelegramAuthProps) {
     // Очищаем контейнер
     const container = document.getElementById('telegram-login');
     if (container) {
-      while (container.firstChild) {
-        container.removeChild(container.firstChild);
-      }
+      container.innerHTML = '';
     }
-
-    // Удаляем только скрипты, которые реально есть в DOM
-    document.querySelectorAll('script[data-telegram-login]').forEach((el) => {
-      if (el.parentNode) {
-        el.parentNode.removeChild(el);
-      }
-    });
 
     // Создаем новый скрипт
     const script = document.createElement('script');
@@ -64,19 +55,11 @@ export default function TelegramAuth({ onSuccess }: TelegramAuthProps) {
     }
 
     return () => {
-      // Корректно очищаем контейнер
+      // Просто очищаем контейнер, не трогаем скрипты напрямую
       const cont = document.getElementById('telegram-login');
       if (cont) {
-        while (cont.firstChild) {
-          cont.removeChild(cont.firstChild);
-        }
+        cont.innerHTML = '';
       }
-      // Удаляем только скрипты, которые реально есть в DOM
-      document.querySelectorAll('script[data-telegram-login]').forEach((el) => {
-        if (el.parentNode) {
-          el.parentNode.removeChild(el);
-        }
-      });
     };
   }, []);
 
